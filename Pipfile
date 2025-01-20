@@ -1,0 +1,17 @@
+[[source]] # type: ignore
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages] # type: ignore
+streamlit = "*"
+vega-datasets = "*"
+python-dotenv = "*"
+pymysql = "*"
+mysqlclient = "==2.1.1"
+mysql = "*"
+
+[dev-packages] # type: ignore
+
+[requires] # type: ignore
+python_version = "3.13"
