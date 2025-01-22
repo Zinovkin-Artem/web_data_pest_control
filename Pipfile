@@ -8,8 +8,9 @@ streamlit = "*"
 vega-datasets = "*"
 python-dotenv = "*"
 pymysql = "*"
-mysqlclient = "==2.1.1"
 mysql = "*"
+streamlit-aggrid = "*"
+xlsxwriter = "*"
 
 [dev-packages] # type: ignore
 

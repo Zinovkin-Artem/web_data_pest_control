@@ -4,6 +4,9 @@ from page_1 import show_page_1
 from page_2 import show_page_2
 from page_3 import show_page_3
 from page_4 import show_page_4
+from page_5 import show_page_5
+
+
 
 # # Функция для проверки пароля
 # def check_password():
@@ -48,7 +51,7 @@ from page_4 import show_page_4
 
 
 # Навигация с использованием selectbox
-page = st.sidebar.radio("Виберіть розділ", ["Перший бар'єр", "Другий барь'ер", "Третій бар'єр", "Документи"])
+page = st.sidebar.radio("Виберіть розділ", ["Перший бар'єр", "Другий барь'ер", "Третій бар'єр", "Документи", "test"])
 
 # Логика для перехода между страницами
 if page == "Перший бар'єр":
@@ -59,3 +62,6 @@ elif page == "Третій бар'єр":
     show_page_3()
 elif page == "Документи":
     show_page_4()
+
+elif page == "test":
+    show_page_5()
