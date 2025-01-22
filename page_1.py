@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+
+
+
+
 def show_page_1():
 #############################################
     chart_data = pd.DataFrame(
@@ -50,3 +54,8 @@ def show_page_1():
 
     c.metric("Humidity", "77%", "5%", border=True)
     d.metric("Pressure", "30.34 inHg", "-2 inHg", border=True)
+    ##################################################
+
+   
+
+    
