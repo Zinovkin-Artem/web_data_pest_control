@@ -30,11 +30,12 @@ def connection_bd():
 def show_login(login):
     conn = connection_bd()
     cursor = conn.cursor()
-    cursor.execute(f"""SELECT login, password FROM `authentication` WHERE authentication.login = '{login}' """)
+    cursor.execute(f"""SELECT login, password, enterprise FROM `authentication` WHERE authentication.login = '{login}' """)
     row = cursor.fetchall()
 
     if  not row:
         return False
+    
     return row[0]
 
 # получаем id из таблицы предприятий

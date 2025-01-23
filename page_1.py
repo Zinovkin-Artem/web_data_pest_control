@@ -1,11 +1,16 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from PestControl.chek_list_in_exel_copy import Chek_list_in_exel
 
 
 
 
-def show_page_1():
+def show_page_1(predpriyatie, bar):
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        report = Chek_list_in_exel(predpriyatie, bar, "01", "2024")
+        report.main()
 #############################################
     chart_data = pd.DataFrame(
         {

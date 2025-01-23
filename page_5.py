@@ -1,8 +1,8 @@
-from PestControl import chek_list_in_exel_copy
+from PestControl.chek_list_in_exel_copy import Chek_list_in_exel
 import streamlit as st
 
 
-def show_page_5():
+def show_page_5(predpriyatie, bar):
     #ВЫБОР МЕСЯЦ ГОД
     # import streamlit as st
     # from datetime import datetime
@@ -27,6 +27,11 @@ def show_page_5():
 #############################################################################################
 
    
-    st.title("Генератор чек-листів")
-    report = chek_list_in_exel_copy.Chek_list_in_exel("ТОВ 'М.В. КАРГО'", "I - II", "01", "2024")
+    
+    
+
+    st.write("selected_predp:", predpriyatie)
+    st.write("barrier:", bar)
+
+    report = Chek_list_in_exel(predpriyatie, bar, "01", "2024")
     report.main()

@@ -1,9 +1,15 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from PestControl.chek_list_in_exel_copy import Chek_list_in_exel
 
 
-def show_page_2():
+def show_page_2(predpriyatie, bar):
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        report = Chek_list_in_exel(predpriyatie, bar)
+        report.main()
     # Функция для сохранения значения в session_state
     def store_value(key):
         st.session_state[key] = st.session_state["_" + key]
