@@ -4,13 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages] # type: ignore
-streamlit = "*"
-vega-datasets = "*"
-python-dotenv = "*"
 pymysql = "*"
 mysql = "*"
 streamlit-aggrid = "*"
 xlsxwriter = "*"
+pdf2image = "*"
+pypdf2 = "*"
+streamlit = "*"
+pillow = "*"
+seaborn = "*"
+plotly-express = "*"
+pyinstaller = "*"
+
 
 [dev-packages] # type: ignore
 
