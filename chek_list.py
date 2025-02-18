@@ -134,7 +134,7 @@ def main(_barier, _predpr, z_po):
         st.session_state[state_key] = False
 
     # Кнопка для отображения формы
-    if st.button(f"📝 Дивитися чек_чист {_barier} бар'єр", key=f"download_chek_list_{_barier}"):
+    if st.button(f"📝 Дивитися чек_лист {_barier} бар'єр", key=f"download_chek_list_{_barier}"):
         st.session_state[state_key] = not st.session_state[state_key]  # ✅ Переключаем состояние только для текущего _barier
 
     # Если форма активна, отображаем элементы

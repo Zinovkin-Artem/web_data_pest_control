@@ -1,5 +1,7 @@
 import MySQLdb
 from datetime import datetime
+# from decimal import Decimal
+from chek_list import list_dk
 
 
 # подключение и отключение к бд
@@ -255,6 +257,115 @@ def diagr_tretiy_how_mishi(_pred):
     
     return date
 
+# берем данные из таблицы грызуны на територии
+def dannie_iz_grizuni_na_territorii(_pred):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    
+
+    cursor.execute(f"""
+        SELECT DATE_FORMAT(time, '%m.%Y') as month, 
+            CAST(SUM(CASE WHEN vid_grizuna = 'Миша' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_misha,
+            CAST(SUM(CASE WHEN vid_grizuna = 'Криса' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_krisa
+        FROM grizuni_na_territorii 
+        JOIN baza_pidpriemstv 
+        ON grizuni_na_territorii.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv  
+        WHERE baza_pidpriemstv.nazva_pidriemstva = "{_pred}" 
+        AND kilkist > 0
+        GROUP BY month
+        ORDER BY DATE_FORMAT(time, '%Y-%m')  -- Сортировка по полной дате (год-месяц)
+    """)
+
+
+
+
+    row = cursor.fetchall()
+    return row
+
+
+
+def grizuni_v_givolovkax(_pred, z_po, barier):
+    if barier == "I" or barier == "II":
+        barier = "I - II"
+    conn = connection_bd()
+    cursor = conn.cursor()
+    nugnie_dk = list_dk(z_po) 
+    # Преобразуем список номеров контейнеров в кортеж
+    nugnie_dk_tuple = tuple(map(str, nugnie_dk))
+
+    sql_query = """
+    SELECT 
+        DATE_FORMAT(sd.time, '%%m.%%Y') AS month,  
+        SUM(
+            CASE 
+                WHEN LOWER(TRIM(sd.value_dk)) REGEXP '^(м|миша|m)-[0-9]+$' 
+                THEN CAST(SUBSTRING_INDEX(sd.value_dk, '-', -1) AS UNSIGNED) 
+                ELSE 0 
+            END
+        ) AS mouse_count,
+        SUM(
+            CASE 
+                WHEN LOWER(TRIM(sd.value_dk)) REGEXP '^(к|криса|k)-[0-9]+$' 
+                THEN CAST(SUBSTRING_INDEX(sd.value_dk, '-', -1) AS UNSIGNED) 
+                ELSE 0 
+            END
+        ) AS rat_count
+    FROM 
+        scan_dk sd
+    JOIN 
+        baza_pidpriemstv bp
+        ON sd.idbaza_pidpriemstv = bp.idbaza_pidpriemstv  
+    JOIN 
+        baza_obladnanya bo
+        ON sd.idbaza_obladnanya = bo.idbaza_obladnanya
+    JOIN 
+        (
+            -- Выбираем самое последнее значение для каждого контейнера на каждую дату
+            SELECT idbaza_obladnanya, MAX(time) AS latest_time
+            FROM scan_dk
+            GROUP BY idbaza_obladnanya, DATE_FORMAT(time, '%%Y-%%m-%%d')
+        ) latest 
+        ON sd.idbaza_obladnanya = latest.idbaza_obladnanya
+        AND sd.time = latest.latest_time
+    WHERE 
+        bp.nazva_pidriemstva = %s
+        AND bo.barier = %s
+        AND bo.number_obladnanya IN %s
+        AND sd.value_dk NOT IN ('НД', 'ІН', '--', 'I', '0')
+    GROUP BY 
+        month
+    ORDER BY 
+        STR_TO_DATE(month, '%%m.%%Y') ASC;
+    """
+
+    # Выполняем SQL-запрос
+    cursor.execute(sql_query, (_pred, barier, nugnie_dk_tuple))
+    row = cursor.fetchall()
+    
+    # Обрабатываем Decimal и None значения
+    sorted_data = sorted(
+        [(r[0], int(r[1] or 0), int(r[2] or 0)) for r in row], 
+        key=lambda x: datetime.strptime(x[0], "%m.%Y")
+    )
+
+    result = tuple(sorted_data)
+    print(result)
+    return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -263,4 +374,8 @@ if __name__ == "__main__":
     # print(baza_predpr("ТОВ 'АДМ'"))
     # show_login_admin()
     # print(baza_vsex_predpr())
-    diagr_tretiy_how_mishi("ТОВ 'АДМ'")
+    # grizuni_v_givolovkax("ТОВ 'АДМ'","1-73", 'I - II')
+    nugnie_dk = list_dk("1-1000") # Номера контейнеров
+    barier = "I - II"  # Фильтр по барьеру
+
+    grizuni_v_givolovkax("ТОВ 'АДМ'", "1-1000", barier)

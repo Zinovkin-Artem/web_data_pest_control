@@ -21,4 +21,4 @@ def show_page_2(predpriyatie, bar, nazva_storinki):
 
 
 
-    diag.diagramma(predpriyatie, bar)
+    diag.diagramma(predpriyatie, bar, z_po = val[8])

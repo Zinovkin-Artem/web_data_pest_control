@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 import chek_list
-from sql import baza_predpr
+from sql import baza_predpr, dannie_iz_grizuni_na_territorii 
 from shapka_prevetstvie import shapka
 
 import diagramma_po_barieram as diag
@@ -31,8 +31,8 @@ def show_page_1(predpriyatie, bar, nazva_storinki):
 
 
 
-    diag.diagramma(predpriyatie, bar)
-
+    diag.diagramma(predpriyatie, bar, val[7])
+   
 
 
    
