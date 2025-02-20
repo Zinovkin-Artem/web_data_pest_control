@@ -6,12 +6,12 @@ import math
 import io
 
 import xlsxwriter
-from PestControl.number_akti_in_zvit import stroka_dly_zvita
+from number_akti_in_zvit import stroka_dly_zvita
 
-import PestControl.sql_bd_copy as bd
-from PestControl.chek_list_in_exel_copy import Chek_list_in_exel
+import sql as bd
+from chek_list_in_exel_copy import Chek_list_in_exel
 # from PestControl.format_color_adm import Formatadm
-from PestControl.format_color_pidpriemctv import Formatcolor
+from format_color_pidpriemctv import Formatcolor
 import time
 
 class Zvit(Chek_list_in_exel):

@@ -1,6 +1,6 @@
 from zvit import Zvit
 import streamlit as st
-from PestControl.chek_list_in_exel_copy import Chek_list_in_exel
+from chek_list_in_exel_copy import Chek_list_in_exel
 import pandas as pd
 import plotly.express as px
 

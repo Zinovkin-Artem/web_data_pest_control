@@ -1,4 +1,4 @@
-from PestControl import sql_bd_copy
+from . import sql_bd_copy
 # import pandas as pd
 # import streamlit as st
 import sql

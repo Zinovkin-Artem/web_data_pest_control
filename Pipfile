@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages] # type: ignore
 pymysql = "*"
-# mysql = "*"
 streamlit-aggrid = "*"
 xlsxwriter = "*"
 pdf2image = "*"

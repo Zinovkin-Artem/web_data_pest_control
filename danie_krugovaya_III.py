@@ -3,7 +3,7 @@
 # import matplotlib.pyplot as plt
 # from chek_list import chek_list
 from datetime import datetime
-from PestControl import sql_bd_copy
+import sql as sql_bd_copy
 import sql
 from collections import defaultdict
 import re
@@ -37,8 +37,8 @@ def krugovaya_diagr(predpr, monse, year,):
 
 
         
-    podpis_danix = sql.podpis_danix("ТОВ 'АДМ'")
-
+    podpis_danix = sql.podpis_danix_1(predpr)
+   
 
     grouped_data = defaultdict(int)
 

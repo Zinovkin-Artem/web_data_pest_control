@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
-from PestControl import sql_bd_copy
+import sql as sql_bd_copy
 from datetime import datetime
 from danie_krugovaya_III import krugovaya_diagr
 
