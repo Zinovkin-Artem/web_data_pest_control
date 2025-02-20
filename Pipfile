@@ -20,4 +20,4 @@ pyinstaller = "*"
 [dev-packages] # type: ignore
 
 [requires] # type: ignore
-python_version = "3.13"
+python_version = "3.10"
