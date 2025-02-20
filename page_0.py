@@ -31,8 +31,8 @@ def show_page_0(predpriyatie, _bar, nazva_storinki):
 
     _z_po = f"{val[7]},{ val[8]},{val[9]}"
 
-    chek_list.main( _barier = "I - II",  _predpr =  predpriyatie, z_po = _z_po)
-    chek_list.main( _barier = "III",  _predpr =  predpriyatie, z_po = _z_po)
+    # chek_list.main( _barier = "I - II",  _predpr =  predpriyatie, z_po = _z_po)
+    # chek_list.main( _barier = "III",  _predpr =  predpriyatie, z_po = _z_po)
 
 
 

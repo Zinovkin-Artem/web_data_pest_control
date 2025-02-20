@@ -1,6 +1,6 @@
 from PestControl import sql_bd_copy
-import pandas as pd
-import streamlit as st
+# import pandas as pd
+# import streamlit as st
 import sql
 
 
@@ -110,7 +110,7 @@ def main():
                             vtoroy_bar =  0
 
                        
-                        # sql.zapis_diagramma_1_2(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
+                        sql.zapis_diagramma_1_2(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
                         print(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
     
 

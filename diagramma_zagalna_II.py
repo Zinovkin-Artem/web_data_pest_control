@@ -18,7 +18,7 @@ def diagramma(_pred):
     selected_range = st.select_slider(
         "Виберіть необхідний діапазон", 
         options=months, 
-        value=(months[0], months[-1]), 
+        value=("07.2023", months[-1]), 
         label_visibility="collapsed"
     )
 

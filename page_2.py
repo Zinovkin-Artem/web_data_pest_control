@@ -17,8 +17,9 @@ def show_page_2(predpriyatie, bar, nazva_storinki):
 
   
 
-    chek_list.main(_barier = bar, _predpr = predpriyatie,  z_po = val[8])
+    
 
 
 
     diag.diagramma(predpriyatie, bar, z_po = val[8])
+    chek_list.main(_barier = bar, _predpr = predpriyatie,  z_po = val[8])

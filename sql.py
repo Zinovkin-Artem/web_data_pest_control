@@ -191,19 +191,33 @@ def baza_vsex_predpr():
     return row
 
 #записываем в таблицу диаграмма 1-2барьер
+import MySQLdb
+
 def zapis_diagramma_1_2(_id_pid, _monse, _I_bar, _II_bar):
     conn = connection_bd()
     cursor = conn.cursor()
+    
     try:
         cursor.execute(
-            f"""INSERT INTO diagramma_1_2_barier (idbaza_pidpriemstv, monse, perviy_barier, vtoroy_barier)
-                                                        VALUES ('{_id_pid}','{_monse}',
-                                                        '{_I_bar}', '{_II_bar}')"""
+            f"""
+            INSERT INTO diagramma_1_2_barier (idbaza_pidpriemstv, monse, perviy_barier, vtoroy_barier)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE 
+                perviy_barier = VALUES(perviy_barier), 
+                vtoroy_barier = VALUES(vtoroy_barier)
+            """, 
+            (_id_pid, _monse, _I_bar, _II_bar)
         )
-    except MySQLdb.IntegrityError:
+        
+        conn.commit()
+    except MySQLdb.Error as e:
+        print(f"Ошибка MySQL: {e}")
         return False
-    conn.commit()
-    conn.close()
+    finally:
+        conn.close()
+    
+    return True
+
 
 
 #из таблицы diagramma_1-2 берем данные для диаграммы
@@ -265,8 +279,8 @@ def dannie_iz_grizuni_na_territorii(_pred):
 
     cursor.execute(f"""
         SELECT DATE_FORMAT(time, '%m.%Y') as month, 
-            CAST(SUM(CASE WHEN vid_grizuna = 'Миша' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_misha,
-            CAST(SUM(CASE WHEN vid_grizuna = 'Криса' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_krisa
+            CAST(SUM(CASE WHEN LOWER(vid_grizuna) LIKE 'миша' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_misha,
+            CAST(SUM(CASE WHEN LOWER(vid_grizuna) LIKE 'криса' THEN kilkist ELSE 0 END) AS UNSIGNED) as total_krisa
         FROM grizuni_na_territorii 
         JOIN baza_pidpriemstv 
         ON grizuni_na_territorii.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv  
@@ -283,7 +297,7 @@ def dannie_iz_grizuni_na_territorii(_pred):
     return row
 
 
-
+#достаем грызунов из живоловок по барьерам
 def grizuni_v_givolovkax(_pred, z_po, barier):
     if barier == "I" or barier == "II":
         barier = "I - II"
@@ -349,8 +363,30 @@ def grizuni_v_givolovkax(_pred, z_po, barier):
     )
 
     result = tuple(sorted_data)
-    print(result)
+    
     return result
+
+
+  # из таблицы подпись данных берем данные для подписи номеров контэйнеов
+def podpis_danix(_predpr):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    
+    sql_query = """
+    SELECT numbers_cont, coment
+    FROM podppis_danih 
+    JOIN baza_pidpriemstv 
+    ON podppis_danih.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv  
+    WHERE baza_pidpriemstv.nazva_pidriemstva = %s 
+    AND podppis_danih.barier = 'III'
+"""
+
+    cursor.execute(sql_query, (_predpr,))
+
+    row = cursor.fetchall()
+    data = [(list_dk(i[0]), i[1]) for i in row]
+    
+    return data
 
 
 
@@ -376,6 +412,7 @@ if __name__ == "__main__":
     # print(baza_vsex_predpr())
     # grizuni_v_givolovkax("ТОВ 'АДМ'","1-73", 'I - II')
     nugnie_dk = list_dk("1-1000") # Номера контейнеров
-    barier = "I - II"  # Фильтр по барьеру
+    barier = "III"  # Фильтр по барьеру
 
-    grizuni_v_givolovkax("ТОВ 'АДМ'", "1-1000", barier)
+    # grizuni_v_givolovkax("ТОВ 'АДМ'", "1-1000", barier)
+    podpis_danix("ТОВ 'АДМ'")

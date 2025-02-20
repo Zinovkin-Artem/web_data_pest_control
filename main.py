@@ -123,8 +123,8 @@ if st.session_state["predpr"]:
     elif selected_page == "Другий бар'єр":
         show_page_2(selected_predp, "II", "Другий бар'єр")
     elif selected_page == "Третій бар'єр":
-        show_page_3(selected_predp)
+        show_page_3(selected_predp, "III", "Третій бар'єр")
     elif selected_page == "Документи":
-        show_page_4()
+        show_page_4(selected_predp)
     elif selected_page == "test":
         show_page_5(selected_predp, "III")
