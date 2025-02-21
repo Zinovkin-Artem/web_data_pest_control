@@ -3,7 +3,24 @@ pymysql.install_as_MySQLdb()
 
 from datetime import datetime
 # from decimal import Decimal
-from chek_list import list_dk
+
+
+def list_dk(_str: str):
+    _str = _str.replace(',', ' ')
+    
+    _str = _str.split()
+   
+    _list = []
+    for i in _str:
+        if "-" in i:
+            a, b = map(int, i.split("-"))
+            _list.extend(range(a, b + 1))
+        else:
+            _list.append(int(i))
+   
+    return _list
+
+
 
 
 # подключение и отключение к бд
@@ -406,18 +423,6 @@ def podpis_danix_1(_predpr):
 
 
 
-if __name__ == "__main__":
-
-    # value_from_db_for_cheklist( "06", "2024", "III", "ТОВ 'АДМ'")
-    # print(baza_predpr("ТОВ 'АДМ'"))
-    # show_login_admin()
-    # print(baza_vsex_predpr())
-    # grizuni_v_givolovkax("ТОВ 'АДМ'","1-73", 'I - II')
-    nugnie_dk = list_dk("1-1000") # Номера контейнеров
-    barier = "III"  # Фильтр по барьеру
-
-    # grizuni_v_givolovkax("ТОВ 'АДМ'", "1-1000", barier)
-    podpis_danix("ТОВ 'АДМ'")
 
 ##########################################################################################3
 # перевод даты в таймстам

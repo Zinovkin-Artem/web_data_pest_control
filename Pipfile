@@ -14,7 +14,7 @@ pillow = "*"
 seaborn = "*"
 plotly-express = "*"
 pyinstaller = "*"
-
+paramiko = "*"
 
 [dev-packages] # type: ignore
 

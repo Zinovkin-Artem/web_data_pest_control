@@ -1,9 +1,5 @@
 import streamlit as st
 
-# import tkinter  # Принудительный импорт
-# import tkinter.filedialog
-# import tkinter.messagebox
-# import tkinter.ttk
 
 
 
@@ -19,6 +15,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 import sql  # предполагаем, что это ваш модуль для работы с базой данных
 from page_0 import show_page_0

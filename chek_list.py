@@ -35,6 +35,7 @@ def list_dk(_str: str):
     return _list
 
 def chek_list(_date, year,  predpr, dk_z_po, barier):
+    
     if barier in  "I - II":
         _barier = "I - II"
         _dates, _month, _data_dict = sql_bd_copy.value_from_db_for_cheklist(_date, year, _barier, predpr)
