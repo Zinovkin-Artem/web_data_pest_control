@@ -51,7 +51,7 @@ def krugovaya_diagr(predpr, monse, year,):
     # Преобразуем в обычный словарь
     grouped_data = dict(grouped_data)
     final_data = [(re.findall(r'\n(.*?)\n', label, re.DOTALL)[0].capitalize(), total ) for label, total in  grouped_data.items() if total > 0]
-    print (final_data)
+   
 
     def plot_pie_chart(data):
         # Суммируем повторяющиеся категории
