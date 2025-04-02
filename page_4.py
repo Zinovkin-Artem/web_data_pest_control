@@ -1,113 +1,146 @@
-import ftplib
 import streamlit as st
-from io import BytesIO
+import os
+import hashlib
+from pathlib import Path
 
 def show_page_4(_predpr):
-    # Параметры FTP-сервера
-    ftp_host = '195.138.73.12'
-    ftp_port = 21
-    ftp_username = 'streamlit'
-    ftp_password = 'lala280508'
-    root_folders = ["/документи/Препарати", f"/документи/{_predpr}!Cхеми",  "/документи/Охорона Праці", "/документи/Компетентність"]
 
-    def connect_ftp():
-        ftp = ftplib.FTP()
-        ftp.connect(ftp_host, ftp_port)
-        ftp.login(ftp_username, ftp_password)
-        ftp.set_pasv(False)
-        return ftp
+    # === Функция для генерации уникального ключа на основе MD5-хеша имени папки ===
+    def generate_key(name):
+        """Генерирует безопасный ключ на основе MD5-хеша имени папки"""
+        return hashlib.md5(name.encode("utf-8", "surrogateescape")).hexdigest()
 
-    def read_file(ftp, filename):
-        file_data = BytesIO()
-        ftp.retrbinary(f'RETR {filename}', file_data.write)
-        file_data.seek(0)
-        return file_data
-
-    pdf_extension = ".pdf"
-
-    # Функция для обработки содержимого папки и вложенных папок
-    def process_folder(ftp, folder):
-        ftp.cwd(folder)
-        items = ftp.nlst()  # Получаем список файлов и папок
-        pdf_files = []  # Для хранения PDF файлов
-        subfolders = []  # Для хранения вложенных папок
-
-        for item in items:
-            try:
-                # Пытаемся войти в папку
-                ftp.cwd(item)  # Пытаемся зайти в папку
-                subfolders.append(item)  # Если папка открылась, добавляем в список вложенных папок
-                ftp.cwd("..")  # Возвращаемся в родительскую директорию
-            except ftplib.error_perm:
-                # Если не удалось открыть как папку, значит это файл, проверяем его расширение
-                if item.lower().endswith(pdf_extension):
-                    pdf_files.append(item)
+    # === Функция для получения списка папок и файлов в указанном пути ===
+    def list_directory(path):
+        """Сканирует указанную директорию и возвращает списки папок и файлов"""
+        folders = []  # Список для папок
+        files = []    # Список для файлов
+        try:
+            for item in Path(path).iterdir():  # Перебираем все элементы в директории
+                if item.is_dir():  
+                    folders.append(item.name)  # Если это папка — добавляем в список папок
+                else:
+                    files.append(item.name)  # Если это файл — добавляем в список файлов
+        except Exception as e:
+            st.error(f"Ошибка доступа к файлам: {e}")  # Выводим ошибку, если нет доступа к директории
         
-        return pdf_files, subfolders
+        return sorted(folders, key=str.casefold), sorted(files, key=str.casefold)  # Возвращаем отсортированные списки
 
-    # Основная логика
-    ftp = connect_ftp()
+    # === Основная функция для отображения файлового браузера ===
+    def show_file_browser(base_url, root_folder):
+        """Отображает файловый браузер с возможностью раскрытия папок и скачивания файлов"""
+        
+        # Инициализируем состояние для отслеживания открытых папок
+        if "opened_folders" not in st.session_state:
+            st.session_state["opened_folders"] = {}
 
-    if "opened_folders" not in st.session_state:
-        st.session_state["opened_folders"] = {}
+        # Вложенная функция для рекурсивного отображения папок и файлов
+        def display_folder(path, relative_path=""):
+            """Рекурсивно отображает папки и файлы"""
+            folders, files = list_directory(path)  # Получаем списки папок и файлов
+            
+            
+            # === Отображение папок ===
+            for folder in folders:
+                folder_key = generate_key(f"{relative_path}/{folder}")  # Создаем уникальный ключ для папки
+                is_open = st.session_state["opened_folders"].get(folder_key, False)  # Проверяем, открыта ли папка
 
-    # Отображаем корневые папки с возможностью открытия/закрытия
-    cols = st.columns(4)
-    for idx, folder in enumerate(root_folders):
-        with cols[idx % 4]:
-            # Добавляем кнопку для открытия/закрытия папки
-            folder_key = f"folder_{folder}"
-            if st.button(f"📂 {folder.replace('!', '/').split("/")[-1]}", key=folder_key):
-                st.session_state["opened_folders"][folder] = not st.session_state["opened_folders"].get(folder, False)
+                # Создаем кнопку для раскрытия папки
+                if st.button(f"📂 {folder}", key=folder_key):
+                    st.session_state["opened_folders"][folder_key] = not is_open  # Переключаем состояние папки
+                    
+                # Если папка открыта, рекурсивно отображаем её содержимое
+                if st.session_state["opened_folders"].get(folder_key, False):
+                    display_folder(Path(path) / folder, relative_path=os.path.join(relative_path, folder))
+            
+            # === Отображение файлов ===
+            for file in files:
+                # Корректируем возможные ошибки с кодировкой
+                file_safe = file.encode("utf-8", "surrogateescape").decode("utf-8", "surrogateescape")
 
-    # Отображаем файлы внутри открытых папок
-    for idx, folder in enumerate(root_folders):
-        if st.session_state["opened_folders"].get(folder, False):
-            with cols[idx % 4]:
-                # st.subheader(f"📁 {folder}")
-                pdf_files, subfolders = process_folder(ftp, folder)
+                # Формируем URL-адрес для скачивания файлов
+                file_url = f"{base_url}/{_predpr}/{relative_path}/{file_safe}".replace("//", "/")
+                file_url = file_url.replace("https:/", "https://")  # Исправляем двойной слеш в URL
+                
+                # Если файл PDF, создаем ссылку для открытия в браузере
+                if file.lower().endswith(".pdf"):
+                    st.markdown(f'<a href="{file_url}" target="_blank">📄 {file_safe}</a>', unsafe_allow_html=True)
+                
+        
+        display_folder(root_folder)  # Запускаем отображение файлов с корневой папки
 
-                # Если в папке есть PDF файлы, показываем их
-                if pdf_files:
-                    for pdf_file in pdf_files:
-                        pdf_data = read_file(ftp, pdf_file)
-                        st.download_button(
-                            label=pdf_file,
-                            data=pdf_data,
-                            file_name=pdf_file,
-                            mime="application/pdf",
-                            key=f"download_{folder}_{pdf_file}"
-                        )
+    # === Интерфейс Streamlit ===
+    st.title("📂 Файловый Браузер через HTTPS")
 
-                # Проверка вложенных папок с возможностью открытия/закрытия
-                for subfolder in subfolders:
-                    subfolder_key = f"subfolder_{folder}_{subfolder}"
-                    if st.button(f"📂 {subfolder}", key=subfolder_key):
-                        # Добавляем возможность скрыть или показать вложенную папку
-                        subfolder_opened = st.session_state.get(f"opened_subfolder_{subfolder}", False)
-                        st.session_state[f"opened_subfolder_{subfolder}"] = not subfolder_opened
-                        # if subfolder_opened:
-                        #     st.write("Свернуть")
+    # Базовый URL для скачивания файлов
+    base_url = "https://app.dez-eltor.com.ua/files"
 
-                    if st.session_state.get(f"opened_subfolder_{subfolder}", False):
-                        subfolder_pdf_files, subfolder_subfolders = process_folder(ftp, f"{folder}/{subfolder}")
+    # Корневая папка для отображения файлов
+    root_folder = f"/home/ftpuser/doki_streamlit/{_predpr}"
 
-                        if subfolder_pdf_files:  # Если вложенная папка содержит PDF файлы
-                            # st.subheader(f"📁 Вложенная папка: {subfolder}")
-                            for pdf_file in subfolder_pdf_files:
-                                pdf_data = read_file(ftp, f"{folder}/{subfolder}/{pdf_file}")
-                                st.download_button(
-                                    label=pdf_file,
-                                    data=pdf_data,
-                                    file_name=pdf_file,
-                                    mime="application/pdf",
-                                    key=f"download_{folder}_{subfolder}_{pdf_file}"
-                                )
+    # Запускаем файловый браузер
+    show_file_browser(base_url, root_folder)
 
-                if not pdf_files and not subfolders:
-                    st.write("Нет PDF в этой папке или вложенных папках.")
 
-    ftp.quit()
+
+
+
+
+
+
+    # def generate_key(name):
+    #     """Генерирует безопасный ключ на основе MD5-хеша имени папки"""
+    #     return hashlib.md5(name.encode("utf-8", "ignore")).hexdigest()
+
+    # def list_directory(path):
+    #     folders = []
+    #     files = []
+    #     try:
+    #         for item in os.listdir(path):
+    #             full_path = os.path.join(path, item)
+    #             if os.path.isdir(full_path):
+    #                 folders.append(item)
+    #             else:
+    #                 files.append(item)
+    #     except Exception as e:
+    #         st.error(f"Ошибка доступа к файлам: {e}")
+    #     return folders, files
+
+    # def show_file_browser(base_url, root_folder):
+    #     if "opened_folders" not in st.session_state:
+    #         st.session_state["opened_folders"] = {}
+
+    #     def display_folder(path, relative_path=""):
+    #         folders, files = list_directory(path)
+            
+    #         for folder in folders:
+    #             folder_key = generate_key(f"{relative_path}/{folder}")
+    #             if st.button(f"📂 {folder}", key=folder_key):
+    #                 st.session_state["opened_folders"][folder_key] = not st.session_state["opened_folders"].get(folder_key, False)
+                
+    #             if st.session_state["opened_folders"].get(folder_key, False):
+    #                 display_folder(os.path.join(path, folder), relative_path=f"{relative_path}/{folder}")
+            
+    #         for file in files:
+    #             file_url = f"{base_url}/{relative_path}/{file}".replace("//", "/")
+    #             file_url = file_url.replace("https:/", "https://")  # Исправляем двойной домен
+    #             if file.lower().endswith(".pdf"):
+    #                 st.markdown(f'<a href="{file_url}" target="_blank">📄 {file}</a>', unsafe_allow_html=True)
+    #             else:
+    #                 st.download_button(label=f"📄 {file}", data="", file_name=file, key=file_url)
+        
+    #     display_folder(root_folder)
+
+    # st.title("Файловый Браузер через HTTPS")
+
+    # base_url = "https://app.dez-eltor.com.ua/files"
+    # root_folder = "/home/ftpuser/doki_streamlit"
+
+    # show_file_browser(base_url, root_folder)
+
+
+
+
 
 
 

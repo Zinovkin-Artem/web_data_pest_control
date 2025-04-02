@@ -17,12 +17,12 @@ def get_cached_data(_pred, z_po, bar):
 
 
 def diagramma(_pred, bar, z_po, flag = True): 
-    data, data_2, data_3 = get_cached_data(_pred, z_po, bar)
+    # data, data_2, data_3 = get_cached_data(_pred, z_po, bar)
 
 
     if flag:   
         # Получаем данные для первой диаграммы
-        # data = sql.dannie_iz_diagramma_1_2(_pred)
+        data = sql.dannie_iz_diagramma_1_2(_pred)
     
         # Извлекаем месяцы, отсортированные по дате
         months = sorted([i[0] for i in data], key=lambda date: datetime.strptime(date, "%m.%Y"))
@@ -34,7 +34,7 @@ def diagramma(_pred, bar, z_po, flag = True):
         selected_range = st.select_slider(
             "Виберіть необхідний діапазон", 
             options=months, 
-            value=("07.2023", months[-1]), 
+            value=(months[0], months[-1]), 
             label_visibility="collapsed"
         )
 
@@ -44,7 +44,16 @@ def diagramma(_pred, bar, z_po, flag = True):
         filtered_data = [entry for entry in data if entry[0] in months[start_idx:end_idx]]
 
         # Переключатель для первой диаграммы
-        toggle_state_1 = st.toggle("Додати інший бар'єр", value=False)
+      
+        if bar == "I":
+            toggle_state_1_labl = "ДОДАТИ/ПРИБРАТИ ДРУГИЙ БАРЄ'Р"
+        else:
+            toggle_state_1_labl = "ДОДАТИ/ПРИБРАТИ ПЕРШИЙ БАРЄ'Р"
+
+
+        toggle_state_1 = st.toggle(toggle_state_1_labl, value=False)
+        
+        
 
         # Извлекаем данные для диаграммы
         labels = [entry[0] for entry in filtered_data]
@@ -80,9 +89,10 @@ def diagramma(_pred, bar, z_po, flag = True):
         st.pyplot(fig)
 
         # Вторая диаграмма (грызуны на территории)
-        # data_2 = sql.dannie_iz_grizuni_na_territorii(_pred)
-        filtered_data_2 = [entry for entry in data_2 if entry[0] in months[start_idx:end_idx]]
+        data_2 = sql.dannie_iz_grizuni_na_territorii(_pred)
         
+        filtered_data_2 = [entry for entry in data_2 if entry[0] in months[start_idx:end_idx]]
+
         labels_2 = [entry[0] for entry in filtered_data_2]
         values1_2 = [entry[1] for entry in filtered_data_2]  # Мыши
         values2_2 = [entry[2] for entry in filtered_data_2]  # Крысы
@@ -111,9 +121,9 @@ def diagramma(_pred, bar, z_po, flag = True):
         st.pyplot(fig2)
 
         # Третья диаграмма (грызуны в живоловках)
-        # data_3 = sql.grizuni_v_givolovkax(_pred, z_po=z_po, barier=bar)
+        data_3 = sql.grizuni_v_givolovkax(_pred, z_po=z_po, barier=bar)
         filtered_data_3 = [entry for entry in data_3 if entry[0] in months[start_idx:end_idx]]
-
+        print(filtered_data_3)
         labels_3 = [entry[0] for entry in filtered_data_3]
         values1_3 = [entry[1] for entry in filtered_data_3]  # Мыши
         values2_3 = [entry[2] for entry in filtered_data_3]  # Крысы
@@ -155,7 +165,7 @@ def diagramma(_pred, bar, z_po, flag = True):
         selected_range = st.select_slider(
             "Виберіть необхідний діапазон", 
             options=months, 
-            value=("07.2023", months[-1]), 
+            value=(months[0], months[-1]), 
             label_visibility="collapsed"
         )
 

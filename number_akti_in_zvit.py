@@ -67,7 +67,7 @@ def stroka_dly_zvita(_predpr,_month, _year):
     
     g = c + [x for x in d if x not in c]
     g = sorted(g)
-    _g = ",; ".join(g)
+    _g = "; ".join(g)
     return _g
     
 

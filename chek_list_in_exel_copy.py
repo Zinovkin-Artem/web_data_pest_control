@@ -146,6 +146,7 @@ class Chek_list_in_exel:
             _month=self.monse,
             _barier=self.barier,
         )
+        
 
         if namber or value:
             numbers_cont = self.numb_conten(value)
@@ -459,20 +460,26 @@ class Chek_list_in_exel:
         if st.session_state["show_form"]:
            
 
-            # predp = "ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ"
-            # barier = "I - II"
-            current_year = datetime.today().year
-           
-            monse = st.selectbox("Місяць", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"])
-            year = st.number_input("Оберіть рік", min_value=2000, max_value=2100, value=current_year, step=1)
+        # predp = "ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ"
+        # barier = "I - II"
+        # current_year = datetime.today().year
+        
+        # monse = st.selectbox("Місяць", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"])
+        # year = st.number_input("Оберіть рік", min_value=2000, max_value=2100, value=current_year, step=1)
 
-            
-
-            # Кнопка скачивания
-            st.download_button(
-                label="📥 Завантажити Excel",
-                
-                data=Chek_list_in_exel(self.predpr, self.barier, monse, year).create_excel(),
-                file_name=f"чек-лист_{self.predpr}_{self.barier}_{monse}_{year}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        
+            try:
+                excel_data = Chek_list_in_exel(self.predpr, self.barier, self.monse, self.year).create_excel()
+                if excel_data == b'':
+                    st.warning("📭 Даних для звіту немає.")
+                # Кнопка скачивания
+                else:
+                    st.download_button(
+                        label="📥 Завантажити Excel",
+                        data=excel_data,
+                        file_name=f"чек-лист_{self.predpr}_{self.barier}_{self.monse}_{self.year}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    st.session_state["show_form"] = not st.session_state["show_form"]  # Инвертируем значение
+            except Exception:
+                    st.write(f"Щось пішло не так!!!")

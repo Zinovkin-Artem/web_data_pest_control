@@ -25,12 +25,6 @@ def show_page_1(predpriyatie, bar, nazva_storinki):
         
         return
 
-  
-
-    
-
-
-
     diag.diagramma(predpriyatie, bar, val[7])
     chek_list.main(_barier = bar, _predpr = predpriyatie,  z_po = val[7])
    

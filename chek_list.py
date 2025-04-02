@@ -47,7 +47,9 @@ def chek_list(_date, year,  predpr, dk_z_po, barier):
         
 
     
-    _podpis_danix = sql_bd_copy.podpis_danix(predpr)
+    podpis_danix = sql_bd_copy.podpis_danix(predpr)
+    # убираем не нужные барьеры там где номера могут быть одинаковые и по первому и по третему барьерам
+    _podpis_danix = [i for i in podpis_danix if i[3] == barier]
     
     dates = _dates
     month = str(*_month)
@@ -80,6 +82,8 @@ def chek_list(_date, year,  predpr, dk_z_po, barier):
             
             if container in data_dicts[i]:
                 value, tooltip = data_dicts[i][container]
+                if value == "I":
+                    value = "ІН"
                 table_data[col_name].append(value)
                 tooltip_data[col_name].append(tooltip)
             else:
@@ -168,6 +172,7 @@ def main(_barier, _predpr, z_po):
 
     # Вызов функции
     chek_list(monse, year, barier=_barier, predpr=_predpr, dk_z_po=z_po)
+    st.info("💡 Умовнi позначення: (0-100%) - кiлькiсть поїдання принад в %, IН - замiна принади з iнших причин,\n М - Миша,К - Криса, --- контейнер вiдсутнiй, НД - немає доступу")
     if _barier == "III":
         krugovaya_diagr(_predpr, monse, year)
 

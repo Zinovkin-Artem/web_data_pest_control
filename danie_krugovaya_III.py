@@ -1,8 +1,3 @@
-# import streamlit as st
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# from chek_list import chek_list
-from datetime import datetime
 import sql as sql_bd_copy
 import sql
 from collections import defaultdict
@@ -14,10 +9,8 @@ import numpy as np
 
 def krugovaya_diagr(predpr, monse, year,):
 
-    current_year = datetime.today().year
-    current_month = datetime.today().strftime("%m")  # Текущий месяц в формате "01", "02" и т.д.
-    
-    st.header("Активність гризунів по приміщеннях")
+    st.header(f"Активність гризунів по приміщеннях")
+    st.write(f"Дата {monse}.{year}")
 
     _dates, _month, _data_dict = sql_bd_copy.value_from_db_for_cheklist(monse, year, "III", predpr)
 
@@ -50,9 +43,24 @@ def krugovaya_diagr(predpr, monse, year,):
 
     # Преобразуем в обычный словарь
     grouped_data = dict(grouped_data)
-    final_data = [(re.findall(r'\n(.*?)\n', label, re.DOTALL)[0].capitalize(), total ) for label, total in  grouped_data.items() if total > 0]
-   
+    if not grouped_data:
+        st.write("У цьому місяці гризуни відсунні")
+        return
+    
+  
+    
 
+        
+    try:
+        final_data = [(re.findall(r'\n(.*?)\n', label, re.DOTALL)[0].capitalize(), total ) for label, total in  grouped_data.items() if total > 0]
+    except:
+        try:
+            final_data = [(f"{label.split(",")[1]} {label.split(",")[2]}", total ) for label, total in  grouped_data.items() if total > 0]
+        except:
+            final_data = [(f"{label.split(",")[1]}", total ) for label, total in  grouped_data.items() if total > 0]
+
+  
+    
     def plot_pie_chart(data):
         # Суммируем повторяющиеся категории
         unique_data = {}

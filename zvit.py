@@ -160,7 +160,7 @@ class Zvit(Chek_list_in_exel):
             0, 0, "логотип укр.png", {"x_scale": 0.25, "y_scale": 0.25}
         )
         shtamp = self.s.insert_image(
-             0, 21, "PestControl\ПЕЧАТЬ-ПОДПИСЬ_png-removebg-preview.png", {"x_scale": 0.20, "y_scale": 0.21}
+             0, 21, "ПЕЧАТЬ-ПОДПИСЬ_png-removebg-preview.png", {"x_scale": 0.20, "y_scale": 0.21}
         )
 
         self.s.merge_range(0, 0, 5, 4, log, self.format_2)
@@ -840,23 +840,25 @@ class Zvit(Chek_list_in_exel):
         if st.session_state["show_form_zvit"]:
             current_year = datetime.today().year
 
-            monse = st.selectbox("Місяць", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], index=int(datetime.today().month)-2, key="zvit_selekt")
-            year = st.number_input("Оберіть рік", min_value=2000, max_value=2100, value=current_year, step=1, key="number_input_zvit")
+            # monse = st.selectbox("Місяць", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], index=int(datetime.today().month)-2, key="zvit_selekt")
+            # year = st.number_input("Оберіть рік", min_value=2000, max_value=2100, value=current_year, step=1, key="number_input_zvit")
 
             # Проверка изменения данных
-            if monse != st.session_state["last_month"] or year != st.session_state["last_year"]:
-                st.session_state["last_month"] = monse
-                st.session_state["last_year"] = year
+            # if monse != st.session_state["last_month"] or year != st.session_state["last_year"]:
+            #     st.session_state["last_month"] = monse
+            #     st.session_state["last_year"] = year
                 
                 # Кнопка для скачивания отчета
-                try:
-                    with st.spinner('Дчекайтесь завантаження, не натискайте нічого'):
-                        st.download_button(
-                            label="📥 Завантажити Excel",
-                            data=Zvit(self._predpr, monse, year).create_excel(),
-                            file_name=f"Звіт_{self._predpr}_{monse}_{year}.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            try:
+                with st.spinner('Дочекайтесь завантаження, не натискайте нічого'):
+                    st.download_button(
+                        label="📥 Завантажити Excel",
+                        data=Zvit(self._predpr, self._month, self._year).create_excel(),
+                        file_name=f"Звіт_{self._predpr}_{self._month}_{self._year}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
-                except Exception:
-                    st.write(f"Щось пішло не так!!!")
+                st.session_state["show_form_zvit"] = not st.session_state["show_form_zvit"]
+
+            except Exception:
+                st.write(f"Щось пішло не так!!!")
             

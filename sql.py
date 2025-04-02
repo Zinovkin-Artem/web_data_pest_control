@@ -216,26 +216,20 @@ def zapis_diagramma_1_2(_id_pid, _monse, _I_bar, _II_bar):
     conn = connection_bd()
     cursor = conn.cursor()
     
-    try:
-        cursor.execute(
-            f"""
-            INSERT INTO diagramma_1_2_barier (idbaza_pidpriemstv, monse, perviy_barier, vtoroy_barier)
-            VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                perviy_barier = VALUES(perviy_barier), 
-                vtoroy_barier = VALUES(vtoroy_barier)
-            """, 
-            (_id_pid, _monse, _I_bar, _II_bar)
-        )
-        
-        conn.commit()
-    except MySQLdb.Error as e:
-        print(f"Ошибка MySQL: {e}")
-        return False
-    finally:
-        conn.close()
-    
-    return True
+    cursor.execute(
+    """
+    INSERT INTO diagramma_1_2_barier (idbaza_pidpriemstv, monse, perviy_barier, vtoroy_barier)
+    VALUES (%s, %s, %s, %s)
+    ON DUPLICATE KEY UPDATE
+        perviy_barier = VALUES(perviy_barier),
+        vtoroy_barier = VALUES(vtoroy_barier)
+    """,
+    (_id_pid, _monse, _I_bar, _II_bar)
+    )
+
+
+    conn.commit()
+    conn.close()
 
 
 
@@ -252,6 +246,7 @@ def dannie_iz_diagramma_1_2(_pred):
     row = cursor.fetchall()
     # ✅ Сортировка списка по дате (преобразуем в datetime для корректного порядка)
     row_ = list(row)
+    
     row_.sort(key=lambda x: datetime.strptime(x[0], "%m.%Y"))
 
     return tuple(row_)
@@ -290,7 +285,7 @@ def diagr_tretiy_how_mishi(_pred):
     
     return date
 
-# берем данные из таблицы грызуны на територии
+# берем данные из таблицы грызуны на територии для диаграммы
 def dannie_iz_grizuni_na_territorii(_pred):
     conn = connection_bd()
     cursor = conn.cursor()
@@ -374,7 +369,7 @@ def grizuni_v_givolovkax(_pred, z_po, barier):
     # Выполняем SQL-запрос
     cursor.execute(sql_query, (_pred, barier, nugnie_dk_tuple))
     row = cursor.fetchall()
-    
+    print(row)
     # Обрабатываем Decimal и None значения
     sorted_data = sorted(
         [(r[0], int(r[1] or 0), int(r[2] or 0)) for r in row], 
@@ -408,11 +403,177 @@ def podpis_danix_1(_predpr):
     return data
 
 
+# из таблицы masege_blog берем данные для бгога и из таблицы база предприятий берем емаил куда отправлять сообщение
+def data_masege_blog(_predpr):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    # _predpr = _predpr.replace("'", "''")
+
+    sql_query = """
+    SELECT message_blog.time, message_blog.title, message_blog.message,message_blog.file_path, message_blog.status, baza_pidpriemstv.email 
+    FROM message_blog 
+    JOIN baza_pidpriemstv 
+    ON message_blog.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv  
+    WHERE LOWER(TRIM(baza_pidpriemstv.nazva_pidriemstva)) = LOWER(TRIM(%s));
+
+    
+"""
+
+    cursor.execute(sql_query, (_predpr))
+
+    row = cursor.fetchall()
+    
+    
+    return row
+
+
+#записываем в таблицу masege_blog
+
+
+def zapis_masege_blog(_pred, time, title, masage, file_path):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    _idbaza_pidpriemstv = receive_id(
+        f"""SELECT  idbaza_pidpriemstv FROM baza_pidpriemstv WHERE  nazva_pidriemstva =
+     "{_pred}" """
+    )
+    try:
+        cursor.execute(
+            f"""
+            INSERT INTO message_blog (idbaza_pidpriemstv, time, title, message, file_path)
+            VALUES (%s, %s, %s, %s, %s)
+            
+            """, 
+            (_idbaza_pidpriemstv, time, title, masage, file_path)
+        )
+        
+        conn.commit()
+    except MySQLdb.Error as e:
+        print(f"Ошибка MySQL: {e}")
+        return False
+    finally:
+        conn.close()
+    
+    return True
+
+# для первого сообщения берем емаил
+def get_email(_predpr):
+    conn = connection_bd()
+    cursor = conn.cursor()    
+
+    sql_query = """SELECT `email` FROM `baza_pidpriemstv` WHERE `nazva_pidriemstva` = %s """
+
+
+    cursor.execute(sql_query, (_predpr))
+
+    row = cursor.fetchall()
+
+    
+    return row
+
+
+#записываем в таблицу вход в стримлит кто и когда входил
+def vxod_v_streamlit(_password, _login, _time, _ip):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            f"""
+            INSERT INTO vxod_v_streamlit (password, login, time, ip)
+            VALUES (%s, %s, %s, %s)
+            """, 
+            (_password, _login, _time, _ip)
+        )
+        
+        conn.commit()
+    except MySQLdb.Error as e:
+        print(f"Ошибка MySQL: {e}")
+        return False
+    finally:
+        conn.close()
+    
+    return True
+##################### новые запросы для отчета возможно не все
+
+#достаем данные из таблицы скан дк для звита по новому
+def value_from_zvit_new(_predpr, _monse=None, _year=None):
+    conn = connection_bd()
+    cursor = conn.cursor()
+
+    sql_query = """
+    SELECT 
+    baza_obladnanya.number_obladnanya, 
+    scan_dk.value_dk, 
+    baza_obladnanya.barier, 
+    DAY(scan_dk.time)
+FROM scan_dk
+JOIN baza_obladnanya 
+    ON scan_dk.idbaza_obladnanya = baza_obladnanya.idbaza_obladnanya
+JOIN baza_pidpriemstv 
+    ON baza_obladnanya.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv
+JOIN (
+    SELECT 
+        MAX(idscan_dk) AS last_id
+    FROM scan_dk
+    WHERE MONTH(time) = %s AND YEAR(time) = %s
+    GROUP BY idbaza_obladnanya, DATE(time)
+) last_scan ON scan_dk.idscan_dk = last_scan.last_id
+WHERE LOWER(TRIM(baza_pidpriemstv.nazva_pidriemstva)) = LOWER(TRIM(%s))
+  AND (
+      (scan_dk.value_dk REGEXP '^[0-9]+$' AND CAST(scan_dk.value_dk AS UNSIGNED) > 0)
+      OR (
+          CHAR_LENGTH(TRIM(scan_dk.value_dk)) > 0
+          AND scan_dk.value_dk NOT REGEXP '^[0]+$'
+      )
+)
+
+"""
 
 
 
 
+    cursor.execute(sql_query, ( int(_monse), int(_year), _predpr))
+    rows = cursor.fetchall()
+    vixodi = [i[3] for i in rows]
+    
+    
+    return list(rows), sorted(set(vixodi))
 
+
+#достаем грызунов на территории для отчета
+def grizuni_na_terit_from_new_zvit(_predpr, _monse, _year):
+
+    conn = connection_bd()
+    cursor = conn.cursor()
+    sql_query = """
+    SELECT grizuni_na_territorii.vid_grizuna, grizuni_na_territorii.kilkist
+    FROM grizuni_na_territorii
+    JOIN baza_pidpriemstv 
+        ON grizuni_na_territorii.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv 
+    WHERE LOWER(TRIM(baza_pidpriemstv.nazva_pidriemstva)) = LOWER(TRIM(%s))
+        AND MONTH(grizuni_na_territorii.time) = %s
+        AND YEAR(grizuni_na_territorii.time) = %s
+        AND grizuni_na_territorii.kilkist > 0
+"""
+    cursor.execute(sql_query, (_predpr,_monse, _year))
+    rows = cursor.fetchall()
+    result = {'К': 0, 'М': 0}
+
+    for name, count in rows:
+        name_lower = name.lower().strip()
+
+        # Пріоритет по ключовим словам
+        if any(k in name_lower for k in ['кр', 'k', 'kr']):
+            result['К'] += count
+        elif any(m in name_lower for m in ['ми', 'm', 'my']):
+            result['М'] += count
+
+    return result
+
+    
+
+#################################### по сюда новые запросы для дианраммы
 
 
 
@@ -977,8 +1138,9 @@ def value_diagramma(poedaemoct, kolichestvo_grizunov, pidpriemstvo, date):
     for i in row:
         if date in i:
             date_for_index.append(row.index(i))
-        diagramma.append({i[0]: [i[1], i[2]]})
-
+        diagramma.append({i[0].capitalize(): [i[1], i[2]]})
+        
+        
     diagramma = diagramma[date_for_index[0] :: -1]
     if len(diagramma) < 12:
         pass
@@ -1379,3 +1541,14 @@ def zmini_v_preparati(_id, _nazva, _termin,_yes_no):
     conn.commit()
 
     conn.close()
+
+if __name__ == "__main__":
+    # data_masege_blog("ТОВ 'М.В. КАРГО' СРВ")
+
+    # print(stroka_dly_zvita("ТОВ 'М.В. КАРГО' СРВ",'07',"2024"))
+    # dannie_iz_diagramma_1_2("ТОВ ПАРТНЕР")
+    # a = get_email("ТОВ 'М.В. КАРГО' СРВ")
+    # print(a[-1][-1])
+    # value_from_zvit_new("ТОВ 'АДМ'", "02","2025")
+    # grizuni_v_givolovkax("ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ", "267-271,245-432")
+    grizuni_na_terit_from_new_zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "09", "2023")

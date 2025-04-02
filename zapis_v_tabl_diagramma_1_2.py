@@ -1,7 +1,6 @@
-from . import sql_bd_copy
+import sql as sql_bd_copy
 # import pandas as pd
 # import streamlit as st
-import sql
 
 
 def list_dk(_str: str):
@@ -18,6 +17,7 @@ def list_dk(_str: str):
 def dannie_po_barieram(z_po, monse, year, predpr):
 
     _dates, _month, _data_dict = sql_bd_copy.value_from_db_for_cheklist(monse, year, "I - II", predpr)
+    
    
     
    
@@ -65,7 +65,6 @@ def dannie_po_barieram(z_po, monse, year, predpr):
         if value:
             ser.append(sum([int(i) for i in value if i.isdigit()])/len(value))
     
-   
     return(round (sum(ser)/len(table_data), 1))
            
 
@@ -74,7 +73,7 @@ def main():
     _list = []
     _mes = ["01","02","03","04","05","06","07","08","09","10","11","12",]
     
-    vse_predpr = sql.baza_vsex_predpr() 
+    vse_predpr = sql_bd_copy.baza_vsex_predpr() 
     
 
     _mes = ["01","02","03","04","05","06","07","08","09","10","11","12",]
@@ -83,7 +82,7 @@ def main():
     for _year in years:
         for pred in vse_predpr: 
                 for i in _mes:
-                    val = sql.baza_predpr(pred[1])
+                    val = sql_bd_copy.baza_predpr(pred[1])
                     _ = []
                     for barier, z_po in enumerate(val[7:9]):
                         
@@ -110,8 +109,40 @@ def main():
                             vtoroy_bar =  0
 
                        
-                        sql.zapis_diagramma_1_2(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
+                        # sql_bd_copy.zapis_diagramma_1_2(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
                         print(pred[0], i +"."+_year, perviy_bar, vtoroy_bar)
+
+def main_cherz_zvit(pred, _mes, _year):
+    val = sql_bd_copy.baza_predpr(pred)
+    
+    _ = []
+    for barier, z_po in enumerate(val[7:9]):
+        
+        if not z_po:
+            z_po="100000"
+            
+        data = dannie_po_barieram(z_po, _mes, _year, pred)
+        if data: 
+            
+            if data ==1:
+                data = 0
+            _.append(data)
+        
+    if _:
+
+        try:
+            perviy_bar = _[0]
+        except:
+            perviy_bar =  0
+
+        try:
+            vtoroy_bar = _[1]
+        except:
+            vtoroy_bar =  0
+
+        
+        sql_bd_copy.zapis_diagramma_1_2(val[0], str(_mes) +"."+_year, perviy_bar, vtoroy_bar)
+        
     
 
     
@@ -127,5 +158,5 @@ if __name__ == "__main__":
     # val = sql.baza_predpr("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА")
     # print(val[7:9])
     # print(dannie_po_barieram("", "03", "2024","ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА"))
-    main()
+    main_cherz_zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "02", "2025" )
                 

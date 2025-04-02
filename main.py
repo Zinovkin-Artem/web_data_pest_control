@@ -1,5 +1,7 @@
 import streamlit as st
+from datetime import datetime
 
+import requests
 
 
 
@@ -17,6 +19,8 @@ st.markdown(
 )
 
 
+
+
 import sql  # предполагаем, что это ваш модуль для работы с базой данных
 from page_0 import show_page_0
 from page_1 import show_page_1
@@ -24,10 +28,19 @@ from page_2 import show_page_2
 from page_3 import show_page_3
 from page_4 import show_page_4
 from page_5 import show_page_5
+from page_6 import show_page_6
 
 # Используем session_state вместо глобальной переменной
 if "predpr" not in st.session_state:
     st.session_state["predpr"] = []  # Список предприятий
+
+#определяем ip входящего
+def get_real_ip():
+    try:
+        response = requests.get("https://api64.ipify.org?format=json")
+        return response.json().get("ip", "Не удалось получить IP")
+    except Exception as e:
+        return f"Ошибка: {e}"
 
 
 
@@ -57,9 +70,11 @@ def check_password():
             if st.session_state["username"].lower() == "admin":
                
                 predpr_session_state = sql.show_login_admin()
-            
-
-
+            if st.session_state["username"].lower() != "admin":
+                sql.vxod_v_streamlit(st.session_state["password"], st.session_state["username"], datetime.now(), get_real_ip())
+           
+                
+                
             del st.session_state["password"]
             del st.session_state["username"]
 
@@ -74,6 +89,11 @@ def check_password():
 
     if st.session_state.get("password_correct", False):
         return True
+    
+    st.markdown(
+    "<h2 style='text-align: center; color: #2E86C1;'>💼 СИСТЕМА ВЗАЄМОДІЇ З КЛІЄНТАМИ</h2>",
+    unsafe_allow_html=True
+)
 
     login_form()
     if "password_correct" in st.session_state and not st.session_state["password_correct"]:
@@ -91,7 +111,15 @@ if st.session_state["predpr"]:
 
     if "," in _predp[0]:
         _predp = _predp[0].split(",")
+
+
+    # если предприятий для показа в списке больше 8 система поймет что вошел админ
+    if len(st.session_state["predpr"][0].split(","))>8:
+        is_admin = True 
+    else:
+        is_admin = False
     
+
 
 
     # Устанавливаем значение по умолчанию, если его нет в session_state
@@ -104,11 +132,12 @@ if st.session_state["predpr"]:
         )
     else:
         selected_predp = _predp[0]  # Если одно предприятие, выбираем его автоматически
+        
    
     # Если предприятий несколько, выбираем раздел для текущего предприятия
     selected_page = st.sidebar.radio(
-        f"Виберіть розділ для {selected_predp}",
-        ["Загальні відомості","Перший бар'єр", "Другий бар'єр", "Третій бар'єр", "Документи", "test"],
+        f"ВИБЕРІТЬ РОЗДІЛ",
+        ["Загальні відомості","Перший бар'єр", "Другий бар'єр", "Третій бар'єр", "📄 ДОКУМЕНТИ", "🔔ПОВІДОМЛЕННЯ", "📊Генерація exel файлів"],
         key="selected_page"
 )
 
@@ -121,7 +150,10 @@ if st.session_state["predpr"]:
         show_page_2(selected_predp, "II", "Другий бар'єр")
     elif selected_page == "Третій бар'єр":
         show_page_3(selected_predp, "III", "Третій бар'єр")
-    elif selected_page == "Документи":
+    elif selected_page == "📄 ДОКУМЕНТИ":
         show_page_4(selected_predp)
-    elif selected_page == "test":
-        show_page_5(selected_predp, "III")
+    elif selected_page == "🔔ПОВІДОМЛЕННЯ":
+        show_page_5(selected_predp, is_admin)
+    elif selected_page == "📊Генерація exel файлів":
+        show_page_6(selected_predp)
+    

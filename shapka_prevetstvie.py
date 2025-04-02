@@ -2,6 +2,8 @@ import streamlit as st
 
 
 def shapka(predpr, nazva, kilkist_obl, z_po:str, vidpovid):
+    if predpr == "ТОВ 'АДМ'":
+        predpr = "ПАТ «АДМ ІЛЛІЧІВСЬК»"
 
     
    
