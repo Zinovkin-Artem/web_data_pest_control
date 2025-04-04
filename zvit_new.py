@@ -584,14 +584,6 @@ class Zvit():
         # Если форма показывается
         if st.session_state["show_form_zvit"]:
             current_year = datetime.today().year
-
-            # monse = st.selectbox("Місяць", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], index=int(datetime.today().month)-2, key="zvit_selekt")
-            # year = st.number_input("Оберіть рік", min_value=2000, max_value=2100, value=current_year, step=1, key="number_input_zvit")
-
-            # Проверка изменения данных
-            # if monse != st.session_state["last_month"] or year != st.session_state["last_year"]:
-            #     st.session_state["last_month"] = monse
-            #     st.session_state["last_year"] = year
                 
                 # Кнопка для скачивания отчета
             try:
@@ -607,7 +599,7 @@ class Zvit():
 
 
             except Exception:
-                 st.warning("📭 Даних для звіту немає.")
+                st.warning("📭 Даних для звіту немає.")
 
 if __name__ == "__main__":
     a = Zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "02", "2025") 

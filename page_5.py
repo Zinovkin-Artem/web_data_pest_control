@@ -6,14 +6,12 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 import smtplib
+from fpdf import FPDF  # для створення PDF
 import sql
 
 
 SAVE_FOLDER = "/var/www/dez-eltor-foto"
 PUBLIC_URL_PREFIX = "https://app.dez-eltor.com.ua/foto_massege"
-
-
-
 
 os.makedirs(SAVE_FOLDER, exist_ok=True)
 
@@ -68,8 +66,40 @@ def send_email(to_email_row: str, subject, message, _url, attachments=None):
         st.error(f"❌ Помилка при надсиланні: {e}")
 
 
+def generate_pdf(topic, date, message_text):
+    font_path = "DejaVuSansMono.ttf"
+    if not os.path.exists(font_path):
+        st.error("❌ Шрифт не знайдено.")
+        return None
+
+    pdf = FPDF()
+    pdf.add_font("DejaVu", "", font_path, uni=True)
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("DejaVu", size=12)
+
+    # Заголовок (звичайний шрифт)
+    pdf.set_font("DejaVu", size=14)
+    pdf.cell(0, 10, f"{topic}", ln=True, align='L')
+    pdf.set_font("DejaVu", size=11)
+    pdf.cell(0, 8, f"Дата: {date}", ln=True)
+    pdf.ln(5)
+
+    # Основний текст
+    for line in message_text.strip().split('\n'):
+        line = line.strip()
+        if line:
+            pdf.multi_cell(0, 7, line)
+        else:
+            pdf.ln(3)
+
+    # Зберігаємо
+    temp_path = f"/tmp/{uuid.uuid4().hex}.pdf"
+    pdf.output(temp_path)
+    return temp_path
+
 def show_page_5(predpriyatie, is_admin):
-    print(f"[DEBUG] SAVE_FOLDER = {SAVE_FOLDER}")
+     
 
     _messages = sql.data_masege_blog(predpriyatie)
     messages = _messages[::-1][:150]
@@ -90,7 +120,7 @@ def show_page_5(predpriyatie, is_admin):
         message = st.text_area("💬 Повідомлення")
 
         uploaded_files = st.file_uploader(
-            "📎 Додайте фото", type=["jpg", "jpeg", "png"], accept_multiple_files=True
+            "📎 Додайте фото", type=["jpg", "jpeg", "png", "pdf"], accept_multiple_files=True
         )
 
         saved_paths = []
@@ -101,12 +131,11 @@ def show_page_5(predpriyatie, is_admin):
                 file_ext = uploaded_file.name.split(".")[-1]
                 unique_name = f"{uuid.uuid4().hex}.{file_ext}"
                 save_path = os.path.join(SAVE_FOLDER, unique_name).replace("\\", "/")
-                print(f"[DEBUG] Зберігаємо фото у: {save_path}")
-
+                
 
                 try:
                     with open(save_path, "wb") as f:
-                        file_data = uploaded_file.getvalue()  # А НЕ read() — getvalue() працює стабільно
+                        file_data = uploaded_file.getvalue()
                         f.write(file_data)
                         f.flush()
                         os.fsync(f.fileno())
@@ -143,10 +172,25 @@ def show_page_5(predpriyatie, is_admin):
                 st.warning("⚠️ Заповніть усі поля.")
 
     if messages:
-        for date, topic, text, image_path, *arg in messages:
+        # Використовуємо enumerate для унікальних ключів
+        for idx, (date, topic, text, image_path, *arg) in enumerate(messages):
             st.markdown(f"### {topic}")
             st.caption(f"🕒 {date.date().strftime('%d-%m-%Y')}")
             st.write(text)
+
+            # Кнопка для генерації та завантаження PDF
+            pdf_btn_label = f"📄 Згенерувати повідомлення '{topic}' у PDF"
+            if st.button(pdf_btn_label, key=f"pdf_{idx}"):
+                pdf_path = generate_pdf(topic, date.date().strftime('%d-%m-%Y'), text)
+                if pdf_path:
+                    with open(pdf_path, "rb") as f:
+                        st.download_button(
+                            label="⬇️ Завантажити PDF",
+                            data=f,
+                            file_name=f"{topic}.pdf",
+                            mime="application/pdf",
+                        )
+
             if image_path:
                 for path in image_path.split(";"):
                     clean_path = path.strip().replace("\\", "/")
