@@ -39,12 +39,12 @@ def chek_list(_date, year,  predpr, dk_z_po, barier):
     if barier in  "I - II":
         _barier = "I - II"
         _dates, _month, _data_dict = sql_bd_copy.value_from_db_for_cheklist(_date, year, _barier, predpr)
-
+      
     elif barier == "III":
         _barier = "III"
         _dates, _month, _data_dict = sql_bd_copy.value_from_db_for_cheklist(_date, year, _barier, predpr)
     
-        
+    
 
     
     podpis_danix = sql_bd_copy.podpis_danix(predpr)
