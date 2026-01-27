@@ -6,7 +6,7 @@ import sql as bd
 from format_color_pidpriemctv import Formatcolor
 from datetime import datetime
 
-class Chek_list_in_exel:
+class Chek_list_in_exel_lamp:
     MONTH_1 = {
         "01": "СІЧЕНЬ",
         "02": "ЛЮТИЙ",
@@ -187,27 +187,24 @@ class Chek_list_in_exel:
         self.s.set_h_pagebreaks([100])
 
         text = (
-            f"Карта огляду дератизацiйних контейнерiв за \n"
+            f"Карта огляду інсектицидних ламп за \n"
             f"{self.MONTH_1[self.monse]} "
             f"{self.year} р. "
         )
 
         self.s.set_column(0, 100, 3)
 
-        vidpovidalniy, how_dk_1_2, how_dk_3 = bd._vidpovidalniy(self.predpr)
+        vidpovidalniy,how_lamp = bd._kilkict_lamp(self.predpr)
 
-        if self.barier == "I - II":
-            how_dk = how_dk_1_2
-        else:
-            how_dk = how_dk_3
+      
 
         log_1 = self.s.insert_image(
             0, 0, "логотип укр.png", {"x_scale": 0.25, "y_scale": 0.25}
         )
-        self.s.merge_range(0, 0, 5, 4, log_1, self.format_2)
-        self.s.merge_range(0, 5, 5, 19, text, self.format_2)
+        self.s.merge_range(0, 0, 6, 4, log_1, self.format_2)
+        self.s.merge_range(0, 5, 6, 19, text, self.format_2)
         self.s.merge_range(0,20, 9,30,
-            f"бар'єр {self.barier} \n загальна кількість обладнання \n{how_dk}шт. ",
+            f" загальна кількість  обладнання \n{how_lamp} шт. ",
             self.format_2,
         )
         if self.predpr == "ТОВ 'АДМ'":
@@ -215,10 +212,10 @@ class Chek_list_in_exel:
         else:
             _predpr =  self.predpr
 
-        self.s.merge_range(6, 0, 6, 4, "Родетицид", self.format_3)
-        self.s.merge_range(6, 5, 6, 9, bd.preparat_yes()[0], self.format_3)
-        self.s.merge_range(6, 10, 6, 15, "придатний до", self.format_3)
-        self.s.merge_range(6, 16, 6, 19, bd.preparat_yes()[1], self.format_3)
+        # self.s.merge_range(6, 0, 6, 4, "Родетицид", self.format_3)
+        # self.s.merge_range(6, 5, 6, 9, bd.preparat_yes()[0], self.format_3)
+        # self.s.merge_range(6, 10, 6, 15, "придатний до", self.format_3)
+        # self.s.merge_range(6, 16, 6, 19, bd.preparat_yes()[1], self.format_3)
         self.s.merge_range(7, 0, 7, 4, "Підприємство замовник", self.format_3)
         self.s.merge_range(7, 5, 7, 19, _predpr, self.format_3)
         self.s.merge_range(8, 0, 8, 4, "Дезінфектор", self.format_3)
@@ -258,8 +255,8 @@ class Chek_list_in_exel:
         row,
     ):
         text_1 = (
-            "Умовнi позначення: (0-100%) - кiлькiсть поїдання принад в %, "
-            "I - замiна принади з iнших причин, М - Миша,\nК - Криса, --- контейнер вiдсутнiй, НД - немає доступу"
+            "Умовнi позначення: 0 - відсутність комах, "
+            "Н - низька чисельність комах, С - середня чисельність комах,\nВ - висока чисельність комах"
         )
         self.s.merge_range(row, 0, row + 1, 26, text_1, self.format_6)  #добавил!!!!!!!!1
         # if row > 74:
@@ -458,7 +455,7 @@ class Chek_list_in_exel:
             st.session_state["show_form"] = False
 
         # Кнопка для отображения/скрытия формы
-        if st.button("📝 Генерація чек-листа"):
+        if st.button("📝 Генерація чек-листа", key="generate_checklist_lamp"):
             st.session_state["show_form"] = not st.session_state["show_form"]  # Инвертируем значение
 
         # Если кнопка нажата, показываем форму
@@ -474,7 +471,7 @@ class Chek_list_in_exel:
 
         
             try:
-                excel_data = Chek_list_in_exel(self.predpr, self.barier, self.monse, self.year).create_excel()
+                excel_data = Chek_list_in_exel_lamp(self.predpr, self.barier, self.monse, self.year).create_excel()
                 if excel_data == b'':
                     st.warning("📭 Даних для звіту немає.")
                 # Кнопка скачивания

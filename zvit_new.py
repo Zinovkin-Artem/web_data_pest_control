@@ -274,13 +274,16 @@ class Zvit():
              0, 21, "ПЕЧАТЬ-ПОДПИСЬ_png-removebg-preview.png", {"x_scale": 0.20, "y_scale": 0.21}
         )
         
-
+        if self._predpr == "ТОВ 'АДМ'":
+            _predpr_ = "ПрАТ «АДМ ІЛЛІЧІВСЬК»"
+        else:
+            _predpr_ =  self._predpr
         self.s.merge_range(0, 0, 5, 4, log, self.format_2)
         self.s.merge_range(0, 5, 5, 20, text, self.format_2)
         self.s.merge_range(0, 21, 10, 28, shtamp, self.format_7)
         self.s.merge_range(6, 0, 6, 20, text2, self.format_3)
         self.s.merge_range(7, 0, 7, 4, "Підприємство замовник", self.format_3)
-        self.s.merge_range(7, 5, 7, 20, self._predpr, self.format_3)
+        self.s.merge_range(7, 5, 7, 20, _predpr_, self.format_3)
         self.s.merge_range(8, 0, 8, 4, "Виконавець", self.format_3)
         self.s.merge_range(8, 5, 8, 20, "ПП ДЕЗ-ЕЛЬТОР", self.format_3)
         self.s.merge_range(9, 0, 9, 4, "Родетицид", self.format_3)
@@ -595,6 +598,7 @@ class Zvit():
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 st.session_state["show_form_zvit"] = not st.session_state["show_form_zvit"]
+                
                 main_cherz_zvit(self._predpr,self._month, self._year)
 
 
@@ -602,6 +606,6 @@ class Zvit():
                 st.warning("📭 Даних для звіту немає.")
 
 if __name__ == "__main__":
-    a = Zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "02", "2025") 
+    a = Zvit("ТОВ 'АДМ'", "02", "2025") 
     a.create_file()
     #"ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ", "11","2024" "ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "02", "2025""ФГ ОРГАНІК СІСТЕМС ПІВНІЧНИЙ"

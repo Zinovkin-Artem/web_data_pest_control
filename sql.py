@@ -428,8 +428,6 @@ def data_masege_blog(_predpr):
 
 
 #записываем в таблицу masege_blog
-
-
 def zapis_masege_blog(_pred, time, title, masage, file_path):
     conn = connection_bd()
     cursor = conn.cursor()
@@ -575,8 +573,45 @@ def grizuni_na_terit_from_new_zvit(_predpr, _monse, _year):
 
 #################################### по сюда новые запросы для дианраммы
 
+#из таблицы дезинсекция берем данные
+def dezinseksiy(_predpr):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    
+    sql_query = """
+        SELECT dezinsekciya.data, dezinsekciya.obem_robit, dezinsekciya.preparat
+        FROM dezinsekciya 
+        JOIN baza_pidpriemstv 
+        ON dezinsekciya.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv
+        WHERE baza_pidpriemstv.nazva_pidriemstva = %s
+    """
+
+    cursor.execute(sql_query, (_predpr,))
+    row = cursor.fetchall()
+    
+    return row
+#в таблицу дезинсекция пишем данные
+def dezinseksiy_zapis(_predpr, data, roboti, preparat):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    _idbaza_pidpriemstv = receive_id(
+        f"""SELECT  idbaza_pidpriemstv FROM baza_pidpriemstv WHERE  nazva_pidriemstva =
+     "{_predpr}" """
+    )
+    
+    sql_query = """
+        INSERT INTO `dezinsekciya` (`id`, `data`, `obem_robit`, `preparat`, `idbaza_pidpriemstv`)
+          VALUES (NULL, %s, %s, %s, %s);
+    """
+
+    cursor.execute(sql_query, (data, roboti, preparat, _idbaza_pidpriemstv))
+    conn.commit()
+    conn.close()
 
 
+#из  таблицы дезинсекция удаляем данные
+def dezinseksiy_delete():
+    ...
 
 
 
@@ -690,6 +725,18 @@ def _vidpovidalniy(predpr):
     cursor = conn.cursor()
     cursor.execute(
         f"""SELECT vidpovidalniy_pidriemstva, kilkist_dk_1_2, kilkist_dk_3
+                        FROM baza_pidpriemstv WHERE nazva_pidriemstva = "{predpr}" """
+    )
+    row = cursor.fetchall()
+
+    return row[0]
+
+# получаем из бд ответственного и количество lamp
+def _kilkict_lamp(predpr):
+    conn = connection_bd()
+    cursor = conn.cursor()
+    cursor.execute(
+        f"""SELECT vidpovidalniy_pidriemstva, kilkict_lamp
                         FROM baza_pidpriemstv WHERE nazva_pidriemstva = "{predpr}" """
     )
     row = cursor.fetchall()
@@ -1551,4 +1598,5 @@ if __name__ == "__main__":
     # print(a[-1][-1])
     # value_from_zvit_new("ТОВ 'АДМ'", "02","2025")
     # grizuni_v_givolovkax("ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ", "267-271,245-432")
-    grizuni_na_terit_from_new_zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "09", "2023")
+    # grizuni_na_terit_from_new_zvit("ТОВ УКРЕЛЕВАТОРПРОМ І-ДІЛЯНКА", "09", "2023")
+    dezinseksiy("ТОВ 'М.В. КАРГО' ГОЛОВНА ТЕРІТОРІЯ")

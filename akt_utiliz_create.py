@@ -133,9 +133,13 @@ class Akti_utiliz_create:
                 'font_size': 14
             })
         )
+        if self._predpr == "ТОВ 'АДМ'":
+            _predpr_ = "ПрАТ «АДМ ІЛЛІЧІВСЬК»"
+        else:
+            _predpr_ =  self._predpr
 
         self.s.merge_range(15, 0, 15, 28, f" від {int(list(date_grizuni.keys())[0])} {self.MES[self._month]} {self._year} року", format_3)
-        self.s.merge_range(17, 0, 17, 28, f"Назва об'єкту: {self._predpr}",format_3)
+        self.s.merge_range(17, 0, 17, 28, f"Назва об'єкту: {_predpr_}",format_3)
         self.s.merge_range(19, 2, 22, 8, "ВИД ШКІДНИКА",format_4)
         self.s.merge_range(19, 9, 22, 17, "КІЛЬКІСТЬ (шт.)",format_4)
         self.s.merge_range(19, 18, 22, 27, "СПОСІБ УТИЛІЗАЦІЇ",format_4)

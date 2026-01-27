@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-
+from zapis_v_tabl_diagramma_1_2 import main_cherz_zvit
 import requests
 
 
@@ -29,10 +29,13 @@ from page_3 import show_page_3
 from page_4 import show_page_4
 from page_5 import show_page_5
 from page_6 import show_page_6
-
+from page_7 import show_page_7
 # Используем session_state вместо глобальной переменной
 if "predpr" not in st.session_state:
     st.session_state["predpr"] = []  # Список предприятий
+
+if "ubdate" not in st.session_state:
+    st.session_state["ubdate"] = False  # проверяет если приэтом входе данные обновлены больше не делает обновление
 
 #определяем ip входящего
 def get_real_ip():
@@ -132,12 +135,16 @@ if st.session_state["predpr"]:
         )
     else:
         selected_predp = _predp[0]  # Если одно предприятие, выбираем его автоматически
+   
+        
+
+   
         
    
     # Если предприятий несколько, выбираем раздел для текущего предприятия
     selected_page = st.sidebar.radio(
         f"ВИБЕРІТЬ РОЗДІЛ",
-        ["Загальні відомості","Перший бар'єр", "Другий бар'єр", "Третій бар'єр", "📄 ДОКУМЕНТИ", "🔔ПОВІДОМЛЕННЯ", "📊Генерація exel файлів"],
+        ["Загальні відомості","Перший бар'єр", "Другий бар'єр", "Третій бар'єр", "📄 ДОКУМЕНТИ", "🔔ПОВІДОМЛЕННЯ", "📊Генерація exel файлів", "📋Роботи по окремому замовленню"],
         key="selected_page"
 )
 
@@ -156,4 +163,5 @@ if st.session_state["predpr"]:
         show_page_5(selected_predp, is_admin)
     elif selected_page == "📊Генерація exel файлів":
         show_page_6(selected_predp)
-    
+    elif selected_page == "📋Роботи по окремому замовленню":
+        show_page_7(selected_predp, is_admin)
