@@ -369,7 +369,7 @@ def grizuni_v_givolovkax(_pred, z_po, barier):
     # Выполняем SQL-запрос
     cursor.execute(sql_query, (_pred, barier, nugnie_dk_tuple))
     row = cursor.fetchall()
-    print(row)
+    
     # Обрабатываем Decimal и None значения
     sorted_data = sorted(
         [(r[0], int(r[1] or 0), int(r[2] or 0)) for r in row], 
@@ -848,55 +848,108 @@ def zapis_pidpriemstva(
     conn.close()
 
 
-# запись данных введенных в ручную в таблицу scan_dk и grizuni_na_territorii
+# # запись данных введенных в ручную в таблицу scan_dk и grizuni_na_territorii
 def write_scan_dk(
-    _predpr, _diction, _krisi_teritori, _mishi_teritori, _combo_month, _baryer
+    _predpr,
+    _diction,
+    _krisi_teritori,
+    _mishi_teritori,
+    _date_str,     # 'DD-MM-YYYY'
+    _baryer
 ):
-    dk_false = []
-    krisi_teritori = ("Криса", _krisi_teritori)
-    mishi_teritori = ("Миша", _mishi_teritori)
+    dk_false = []     # контейнеры, которые не записались
+    ok = False
+    err = ""
 
     conn = connection_bd()
     cursor = conn.cursor()
 
-    _idbaza_pidpriemstv = receive_id(
-        f"""SELECT  idbaza_pidpriemstv FROM baza_pidpriemstv WHERE  nazva_pidriemstva =
-     "{_predpr}" """
-    )
-
-    # запись в табл грызуни на территории
-
-    for i in [krisi_teritori, mishi_teritori]:
-        cursor.execute(
-            f"""INSERT INTO grizuni_na_territorii (vid_grizuna, kilkist, idbaza_pidpriemstv, time) 
-                            VALUES ('{i[0]}','{i[1]}','{_idbaza_pidpriemstv}', STR_TO_DATE('{_combo_month}',
-                             '%d-%m-%Y'))"""
+    try:
+        # =====================================================
+        # 1) ID предприятия
+        # =====================================================
+        _idbaza_pidpriemstv = receive_id(
+            f"""
+            SELECT idbaza_pidpriemstv
+            FROM baza_pidpriemstv
+            WHERE nazva_pidriemstva = "{_predpr}"
+            """
         )
 
-    for number_dk, value_dk in _diction.items():
-        if value_dk == "":
-            pass
-        else:
-            _idbaza_obladnanya = receive_id(
-                f"""SELECT  idbaza_obladnanya FROM baza_obladnanya
-                        WHERE  number_obladnanya = '{number_dk}' AND idbaza_pidpriemstv ='{_idbaza_pidpriemstv}' 
-                        AND barier ='{_baryer}' """
+        if not _idbaza_pidpriemstv:
+            return False, dk_false, "Підприємство не знайдено"
+
+        # =====================================================
+        # 2) Грызуны на территории
+        # =====================================================
+        for vid, kilkist in (("Криса", _krisi_teritori), ("Миша", _mishi_teritori)):
+            cursor.execute(
+                f"""
+                INSERT INTO grizuni_na_territorii
+                (vid_grizuna, kilkist, idbaza_pidpriemstv, time)
+                VALUES (
+                    "{vid}",
+                    "{kilkist}",
+                    "{_idbaza_pidpriemstv}",
+                    STR_TO_DATE("{_date_str}", '%d-%m-%Y')
+                )
+                """
             )
+
+        # =====================================================
+        # 3) Контейнеры
+        # =====================================================
+        for number_dk, value_dk in _diction.items():
+
+            if value_dk == "":
+                continue
+
+            _idbaza_obladnanya = receive_id(
+                f"""
+                SELECT idbaza_obladnanya
+                FROM baza_obladnanya
+                WHERE number_obladnanya = "{number_dk}"
+                  AND idbaza_pidpriemstv = "{_idbaza_pidpriemstv}"
+                  AND barier = "{_baryer}"
+                """
+            )
+
+            if not _idbaza_obladnanya:
+                dk_false.append(number_dk)
+                continue
 
             try:
                 cursor.execute(
-                    f"""INSERT INTO scan_dk (time, value_dk, idbaza_obladnanya, idbaza_pidpriemstv, idspestalisti) 
-                                            VALUES (STR_TO_DATE('{_combo_month}','%d-%m-%Y'),'{value_dk}','{_idbaza_obladnanya}',
-                                            '{_idbaza_pidpriemstv}', '1')"""
+                    f"""
+                    INSERT INTO scan_dk
+                    (time, value_dk, idbaza_obladnanya, idbaza_pidpriemstv, idspestalisti)
+                    VALUES (
+                        STR_TO_DATE("{_date_str}", '%d-%m-%Y'),
+                        "{value_dk}",
+                        "{_idbaza_obladnanya}",
+                        "{_idbaza_pidpriemstv}",
+                        "1"
+                    )
+                    """
                 )
             except MySQLdb.IntegrityError:
                 dk_false.append(number_dk)
 
-    conn.commit()
+        conn.commit()
+        ok = True
+        return ok, dk_false, ""
+    
 
-    conn.close()
+    except Exception as e:
+        conn.rollback()
+        err = str(e)
+        
+        return False, dk_false, err
 
-    return dk_false
+    finally:
+        
+        conn.close()
+
 
 
 # получение данных из БД таблица skan_dk для формирования чек-листа

@@ -16,6 +16,7 @@ plotly-express = "*"
 pyinstaller = "*"
 paramiko = "*"
 fpdf = "*"
+streamlit-extras = "*"
 
 [dev-packages] # type: ignore
 
