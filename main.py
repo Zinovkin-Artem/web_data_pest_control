@@ -31,6 +31,7 @@ from page_5 import show_page_5
 from page_6 import show_page_6
 from page_7 import show_page_7
 from page_8_zapolnit_chek_list import show_page_8
+from page_9_table_danix import show_page_9
 # Используем session_state вместо глобальной переменной
 if "predpr" not in st.session_state:
     st.session_state["predpr"] = []  # Список предприятий
@@ -147,7 +148,7 @@ if st.session_state["predpr"]:
         selected_page = st.sidebar.radio(
             f"ВИБЕРІТЬ РОЗДІЛ",
             ["Загальні відомості","Перший бар'єр", "Другий бар'єр", "Третій бар'єр", "📄 ДОКУМЕНТИ", "🔔ПОВІДОМЛЕННЯ", "📊Генерація exel файлів", "📋Роботи по окремому замовленню", ""
-            "Заповнити чек-лист"],
+            "Заповнити чек-лист", "Таблиця данних"],
             key="selected_page"
         )
     else:
@@ -177,3 +178,5 @@ if st.session_state["predpr"]:
         show_page_7(selected_predp, is_admin)
     elif selected_page == "Заповнити чек-лист":
         show_page_8()
+    elif selected_page == "Таблиця данних":
+        show_page_9()

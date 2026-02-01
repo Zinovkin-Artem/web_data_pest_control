@@ -1382,75 +1382,63 @@ def del_podpis_danix_tabl(_id):
 
 
 # выводим данные из таблицы ckan_dk
-def ckan_dk_tabl(_predpr, _data, data_1, _barier, _number_dk):
-    
+def ckan_dk_tabl_rows(_predpr, _date_from, _date_to, _barier, _number_dk):
     conn = connection_bd()
     cursor = conn.cursor()
-    data_1 += datetime.timedelta(days=1)
-    a = "0"
-    b = "0"
-    c = "0"
-    _kay = ""
+
+    # включаем весь день "по" (до 23:59:59)
+    dt_from = datetime.combine(_date_from, datetime.min.time())
+    dt_to   = datetime.combine(_date_to,   datetime.max.time())
+
+
+    sql = """
+        SELECT
+            scan_dk.idscan_dk,
+            scan_dk.time,
+            baza_pidpriemstv.nazva_pidriemstva,
+            baza_obladnanya.number_obladnanya,
+            scan_dk.value_dk,
+            baza_obladnanya.barier
+        FROM scan_dk
+        JOIN baza_pidpriemstv
+            ON scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv
+        JOIN baza_obladnanya
+            ON scan_dk.idbaza_obladnanya = baza_obladnanya.idbaza_obladnanya
+        WHERE scan_dk.time BETWEEN %s AND %s
+    """
+    params = [dt_from, dt_to]
+
     if _predpr:
-        a = "1"
-    if _barier:
-        c = "1"
-    if _number_dk:
-        b = "1"
-    
-    _kay = a + b + c
+        sql += " AND baza_pidpriemstv.nazva_pidriemstva = %s"
+        params.append(_predpr)
 
-    if len (_number_dk) ==1:
-        _number_dk = tuple((_number_dk[0], 1000000))
-        
-    
-    _sql_zapros = {
-      
-        
-        "000": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk 
-                JOIN baza_pidpriemstv ON scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv 
-                JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya
-                WHERE scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' ORDER BY time ASC, number_obladnanya, number_obladnanya """,
+    if _barier and _barier != "ВСІ":
+        sql += " AND baza_obladnanya.barier = %s"
+        params.append(_barier)
 
-        "001": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk 
-                JOIN baza_pidpriemstv ON scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv 
-                JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya
-                WHERE  baza_obladnanya.barier =  '{_barier}' AND   scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}'ORDER BY time ASC, number_obladnanya, number_obladnanya """,
+    if _number_dk:  # список/кортеж номеров, напр [1,2,3]
+        placeholders = ",".join(["%s"] * len(_number_dk))
+        sql += f" AND baza_obladnanya.number_obladnanya IN ({placeholders})"
+        params.extend(list(_number_dk))
 
-        "100": f"""SELECT idscan_dk,time, nazva_pidriemstva,number_obladnanya, value_dk, barier FROM scan_dk JOIN baza_pidpriemstv
-             ON scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =    baza_obladnanya.idbaza_obladnanya
-               WHERE scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' AND baza_pidpriemstv.nazva_pidriemstva = "{_predpr}"ORDER BY time ASC, number_obladnanya, number_obladnanya """,
+    sql += " ORDER BY scan_dk.time ASC, baza_obladnanya.number_obladnanya ASC"
 
-        "101": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk JOIN baza_pidpriemstv ON 
-        scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv    JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya
-                WHERE baza_pidpriemstv.nazva_pidriemstva = "{_predpr}" AND  baza_obladnanya.barier =  '{_barier}' AND scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' ORDER BY time ASC, number_obladnanya, number_obladnanya """,
-
-        "010": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk JOIN baza_pidpriemstv ON 
-        scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya WHERE baza_obladnanya.number_obladnanya in {_number_dk}   AND scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}'  ORDER BY time ASC, number_obladnanya """, 
-
-        "011": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk JOIN baza_pidpriemstv ON 
-        scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya WHERE baza_obladnanya.number_obladnanya in {_number_dk}  AND  baza_obladnanya.barier =  '{_barier}' AND scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' ORDER BY time ASC, number_obladnanya""", 
-
-        "110": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk JOIN baza_pidpriemstv ON 
-        scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya WHERE baza_pidpriemstv.nazva_pidriemstva = "{_predpr}" AND baza_obladnanya.number_obladnanya in {_number_dk} AND scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' ORDER BY number_obladnanya ASC, time ASC """,
-
-        "111": f"""SELECT idscan_dk,time,  nazva_pidriemstva,number_obladnanya,value_dk, barier FROM scan_dk JOIN baza_pidpriemstv ON 
-        scan_dk.idbaza_pidpriemstv = baza_pidpriemstv.idbaza_pidpriemstv JOIN baza_obladnanya ON scan_dk.idbaza_obladnanya =  baza_obladnanya.idbaza_obladnanya WHERE baza_pidpriemstv.nazva_pidriemstva = "{_predpr}" AND baza_obladnanya.number_obladnanya in {_number_dk}  AND  baza_obladnanya.barier =  '{_barier}' AND scan_dk.time  BETWEEN   '{_data}' AND   '{data_1}' ORDER BY time ASC,number_obladnanya  """,
-                  
-    }
-
-    cursor.execute(_sql_zapros[_kay])
-    row = cursor.fetchall()
-
-    return row
+    cursor.execute(sql, params)
+    return cursor.fetchall()  # [(id, datetime, enterprise, num, value, barrier), ...]
 
 
 # удаляем данные из таблицы ckan_dk
-def del_ckan_dk(_id):
+def del_ckan_dk_many(ids: list[int]):
+    if not ids:
+        return
+
     conn = connection_bd()
     cursor = conn.cursor()
 
-    cursor.execute(f"""DELETE FROM `scan_dk` WHERE idscan_dk = {_id}""")
+    placeholders = ",".join(["%s"] * len(ids))
+    sql = f"DELETE FROM scan_dk WHERE idscan_dk IN ({placeholders})"
+
+    cursor.execute(sql, ids)
     conn.commit()
 
 
